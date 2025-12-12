@@ -1,16 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@radix-ui/react-label";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
-
-import React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { resetPasswordSchema, ResetPasswordSchema } from "@/lib/schemes/auth.schema";
+import { resetPasswordSchema } from "@/lib/schemes/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "@/lib/utils";
 import ReusablePasswordInput from "@/components/features/auth/reusable-password-input";
 
 interface CreatePasswordFormFields {
@@ -18,10 +15,12 @@ interface CreatePasswordFormFields {
   rePassword: string;
 }
 
-export default function CreatePasswordForm() {
+interface CreatePasswordFormProps {
+  email: string;
+}
+
+export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
 
   const form = useForm<CreatePasswordFormFields>({
     resolver: zodResolver(resetPasswordSchema),
@@ -34,51 +33,53 @@ export default function CreatePasswordForm() {
 
   const {
     handleSubmit,
+    setError,
     formState: { errors },
   } = form;
 
   const onSubmit: SubmitHandler<CreatePasswordFormFields> = async (data) => {
-    if (!email) {
-      toast.error("Email is required");
-      return;
+    // Clear previous global error if exists
+    if (errors.root?.serverError) {
+      setError("root.serverError", { type: "manual", message: "" });
     }
 
     try {
-      const response = await fetch(`/api/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          newPassword: data.password,
-        }),
+      // Use server action instead of API route
+      const { resetPassword } = await import("@/app/(auth)/actions/auth.actions");
+
+      const result = await resetPassword({
+        email,
+        newPassword: data.password,
       });
 
-      const payload = await response.json();
-
-      if (!response.ok) {
-        toast.error(payload?.message || "Failed to reset password");
+      if (!result.success) {
+        // Set global error if no field errors exist
+        const hasFieldErrors = errors.password || errors.rePassword;
+        if (!hasFieldErrors) {
+          setError("root.serverError", {
+            type: "manual",
+            message: result.message || "Something went wrong"
+          });
+        }
+        toast.error(result.message || "Failed to reset password");
         return;
       }
 
       toast.success("Password reset successfully!");
       router.push("/login");
-    } catch (error: any) {
-      console.error("Reset password error:", error);
+    } 
+    catch (error: any) {
+      // Set global error if no field errors exist
+      const hasFieldErrors = errors.password || errors.rePassword;
+      if (!hasFieldErrors) {
+        setError("root.serverError", {
+          type: "manual",
+          message: error?.message || "Something went wrong"
+        });
+      }
       toast.error(error?.message || "Something went wrong. Please try again.");
     }
   };
-
-  if (!email) {
-    return (
-      <div className="flex flex-col gap-8">
-        <h1 className="text-3xl font-bold mb-2">Create New Password</h1>
-        <p className="text-red-500">Email is required. Please go back to forgot password page.</p>
-        <Link href="/forgot-password" className="text-blue-600 hover:underline">
-          Go back
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -88,6 +89,7 @@ export default function CreatePasswordForm() {
           Your new password must be different from previously used passwords.
         </p>
       </div>
+      
 
       <FormProvider {...form}>
         <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2">
@@ -120,12 +122,14 @@ export default function CreatePasswordForm() {
           </div>
 
           {/* Submit Button */}
+          {errors.root?.serverError && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+          <p className="text-red-600 text-center text-sm">{errors.root.serverError.message}</p>
+        </div>
+      )}
           <Button
             type="submit"
-            className={cn(
-              "mt-4 w-full",
-              (errors.password || errors.rePassword) && "mt-6"
-            )}
+            className='mt-4 w-full' 
           >
             Reset Password
           </Button>

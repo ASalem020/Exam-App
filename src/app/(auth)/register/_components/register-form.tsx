@@ -42,41 +42,41 @@ export default function RegisterFrom() {
   const {
     register,
     handleSubmit,
-    
+    setError,
     formState: { errors },
   } = form;
   const onSubmit: SubmitHandler<registerFormFields> = async (data) => {
-    const res = await fetch(`/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        username: data.username,
-        email: data.email,
-        phone: data.phone,
-        password: data.password,
-        rePassword: data.rePassword,
-      }),
-    });
-
-    const payload = await res.json();
-    if (!res.ok) {
-      toast.error(payload?.message || "Registration failed");
-      return;
+    // Clear previous global error if exists
+    if (errors.root?.serverError) {
+      setError("root.serverError", { type: "manual", message: "" });
     }
 
-    // Auto-login after successful signup
-    // const login = await signIn("credentials", {
-    //   email: data.email,
-    //   password: data.password,
-    //   redirect: false,
-    // });
+    // Use server action instead of API route
+    const { registerUser } = await import("@/app/(auth)/actions/auth.actions");
 
-    // if (login?.error) {
-    //   toast.error(login.error);
-    //   return;
-    // }
+    const result = await registerUser({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      username: data.username,
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+      rePassword: data.rePassword,
+    });
+
+    if (!result.success) {
+      // Set global error if no field errors exist
+      const hasFieldErrors = errors.firstName || errors.lastName || errors.username || 
+                            errors.email || errors.phone || errors.password || errors.rePassword;
+      if (!hasFieldErrors) {
+        setError("root.serverError", {
+          type: "manual",
+          message: result.message || "Something went wrong"
+        });
+      }
+      toast.error(result.message || "Registration failed");
+      return;
+    }
 
     toast.success("Account created successfully.");
     router.push("/login");
@@ -85,6 +85,7 @@ export default function RegisterFrom() {
   return (
     <div className=" flex  flex-col gap-8  ">
       <h1 className="text-3xl font-bold mb-2">Create Account</h1>
+      
       <FormProvider {...form}>
         <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
@@ -141,9 +142,9 @@ export default function RegisterFrom() {
                 placeholder="user123"
                 {...register("username")}
               />
-            {errors.username && (
-              <p className="text-red-500">{errors.username.message}</p>
-            )}
+              {errors.username && (
+                <p className="text-red-500">{errors.username.message}</p>
+              )}
             </div>
             {/* Email */}
             <div>
@@ -159,9 +160,9 @@ export default function RegisterFrom() {
                 placeholder="user@example.com"
                 {...register("email")}
               />
-            {errors.email && (
-              <p className="text-red-500">{errors.email.message}</p>
-            )}
+              {errors.email && (
+                <p className="text-red-500">{errors.email.message}</p>
+              )}
             </div>
             {/* Phone Number */}
             <div>
@@ -192,9 +193,14 @@ export default function RegisterFrom() {
             </div>
           </div>
           {/* Submit Button */}
+          {errors.root?.serverError && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+          <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
+        </div>
+      )}
           <Button type="submit"
-          onClick={()=>console.log(form.getValues())}
-          className="mt-8 w-full">
+            onClick={() => console.log(form.getValues())}
+            className="mt-8 w-full">
             Create Account
           </Button>
         </form>
