@@ -4,19 +4,19 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { registerFormFields } from "@/app/(auth)/register/_components/register-form";
+import { RegisterFormFields } from "@/lib/types/auth";
 
 
-export default function PasswordInput({name, className}: {name: keyof registerFormFields, className?: string}) {
+export default function PasswordInput({name, className}: {name: keyof RegisterFormFields, className?: string}) {
   const [show, setShow] = useState(false);
-  const {register, formState: {errors}} =useFormContext<registerFormFields>();
+  const {register, formState: {errors}} =useFormContext<RegisterFormFields>();
 
   return (
     <div className="relative">
       <Input
         type={show ? "text" : "password"}
         placeholder='********'
-        className={`pr-10 ${errors[name] && "border-red-500 focus-visible:ring-red-500"} `}
+        className={`pr-10 ${errors[name] && "border-red-500 focus-visible:ring-red-500"} ${className}`}
         id={name}
         {...register(name)}
 
