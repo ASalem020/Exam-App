@@ -9,19 +9,27 @@ import { toast } from "sonner";
 import { resetPasswordSchema } from "@/lib/schemes/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ReusablePasswordInput from "@/components/features/auth/reusable-password-input";
-
-interface CreatePasswordFormFields {
-  password: string;
-  rePassword: string;
-}
+import { useAuth } from "@/context/auth-context";
+import { CreatePasswordFormFields } from "@/lib/types/auth";
 
 interface CreatePasswordFormProps {
   email: string;
 }
 
 export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
+  /* -------------------------------------------------------------------------- */
+  /*                                 NAVIGATION                                 */
+  /* -------------------------------------------------------------------------- */
   const router = useRouter();
 
+  /* -------------------------------------------------------------------------- */
+  /*                                   CONTEXT                                  */
+  /* -------------------------------------------------------------------------- */
+  const { clearAuthState } = useAuth();
+
+  /* -------------------------------------------------------------------------- */
+  /*                              FORM & VALIDATION                             */
+  /* -------------------------------------------------------------------------- */
   const form = useForm<CreatePasswordFormFields>({
     resolver: zodResolver(resetPasswordSchema),
     mode: "onChange",
@@ -37,12 +45,11 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
     formState: { errors },
   } = form;
 
+  /* -------------------------------------------------------------------------- */
+  /*                                  FUNCTIONS                                 */
+  /* -------------------------------------------------------------------------- */
+  
   const onSubmit: SubmitHandler<CreatePasswordFormFields> = async (data) => {
-    // Clear previous global error if exists
-    if (errors.root?.serverError) {
-      setError("root.serverError", { type: "manual", message: "" });
-    }
-
     try {
       // Use server action instead of API route
       const { resetPassword } = await import("@/app/(auth)/actions/auth.actions");
@@ -53,32 +60,26 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
       });
 
       if (!result.success) {
-        // Set global error if no field errors exist
-        const hasFieldErrors = errors.password || errors.rePassword;
-        if (!hasFieldErrors) {
+     
           setError("root.serverError", {
             type: "manual",
             message: result.message || "Something went wrong"
           });
+          return;
         }
-        toast.error(result.message || "Failed to reset password");
-        return;
-      }
-
-      toast.success("Password reset successfully!");
+  
+      toast.success(result.message || "Password reset successfully!");
+      clearAuthState(); // Clear all stored state
       router.push("/login");
-    } 
+    }
     catch (error: any) {
-      // Set global error if no field errors exist
-      const hasFieldErrors = errors.password || errors.rePassword;
-      if (!hasFieldErrors) {
+    
         setError("root.serverError", {
           type: "manual",
           message: error?.message || "Something went wrong"
         });
       }
-      toast.error(error?.message || "Something went wrong. Please try again.");
-    }
+   
   };
 
   return (
@@ -89,7 +90,7 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
           Your new password must be different from previously used passwords.
         </p>
       </div>
-      
+
 
       <FormProvider {...form}>
         <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2">
@@ -123,13 +124,13 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
 
           {/* Submit Button */}
           {errors.root?.serverError && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-red-600 text-center text-sm">{errors.root.serverError.message}</p>
-        </div>
-      )}
+            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+              <p className="text-red-600 text-center text-sm">{errors.root.serverError.message}</p>
+            </div>
+          )}
           <Button
             type="submit"
-            className='mt-4 w-full' 
+            className='mt-4 w-full'
           >
             Reset Password
           </Button>

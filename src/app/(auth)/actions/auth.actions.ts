@@ -1,33 +1,24 @@
 "use server";
 
+import { RegisterFormFields } from "@/lib/types/auth";
+import { ActionResponse } from "@/lib/types/api";
+
 /**
  * Server Actions for Authentication
  * These are secure, server-only functions that replace API routes
  */
 
-interface ActionResponse<T = any> {
-    success: boolean;
-    data?: T;
-    message?: string;
-    status?: number;
-}
+/* -------------------------------------------------------------------------- */
+/*                                  FUNCTIONS                                 */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Register a new user
+ * @param formData - The registration form data
+ * @returns {Promise<ActionResponse>} The response from the registration API
  */
-export async function registerUser(formData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    phone: string;
-    [key: string]: any;
-}): Promise<ActionResponse> {
+export async function registerUser(formData: RegisterFormFields): Promise<ActionResponse> {
     try {
-        if (!process.env.API) {
-            throw new Error("API environment variable is not configured");
-        }
-
         const res = await fetch(`${process.env.API}/auth/signup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -37,30 +28,34 @@ export async function registerUser(formData: {
         const payload = await res.json();
 
         if (!res.ok) {
-            const message = payload?.message || "Registration failed";
-            return { success: false, message, status: res.status };
+            return {
+                success: false,
+                data: payload,
+                message: payload.message || "Registration failed"
+            };
         }
 
-        return { success: true, data: payload, status: 200 };
-    } catch (e: any) {
-        console.error("Registration error:", e);
+        return {
+            success: true,
+            data: payload,
+            message: payload.message || "Registration successful"
+        };
+    } catch (error) {
+        console.error("Register error:", error);
         return {
             success: false,
-            message: e?.message || "Unexpected error",
-            status: 500,
+            message: "Network error. Please try again."
         };
     }
 }
 
 /**
  * Request password reset (send OTP to email)
+ * @param email - The email address to send OTP to
+ * @returns {Promise<ActionResponse>} The response from the forgot password API
  */
 export async function forgotPassword(email: string): Promise<ActionResponse> {
     try {
-        if (!process.env.API) {
-            throw new Error("API environment variable is not configured");
-        }
-
         const res = await fetch(`${process.env.API}/auth/forgotPassword`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -70,33 +65,37 @@ export async function forgotPassword(email: string): Promise<ActionResponse> {
         const payload = await res.json();
 
         if (!res.ok) {
-            const message = "Invalid email";
-            return { success: false, message, status: res.status };
+            return {
+                success: false,
+                data: payload,
+                message: payload.message || "Failed to send OTP"
+            };
         }
 
-        return { success: true, data: payload, status: 200 };
-    } catch (e: any) {
-        console.error("Forgot password error:", e);
+        return {
+            success: true,
+            data: payload,
+            message: payload.message || "OTP sent successfully"
+        };
+    } catch (error) {
+        console.error("Forgot password error:", error);
         return {
             success: false,
-            message: e?.message || "Unexpected error",
-            status: 500,
+            message: "Network error. Please try again."
         };
     }
 }
 
 /**
  * Verify OTP/reset code
+ * @param data - The email and reset code
+ * @returns {Promise<ActionResponse>} The response from the verify OTP API
  */
 export async function verifyOTP(data: {
     email: string;
     resetCode: string;
 }): Promise<ActionResponse> {
     try {
-        if (!process.env.API) {
-            throw new Error("API environment variable is not configured");
-        }
-
         const res = await fetch(`${process.env.API}/auth/verifyResetCode`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -106,38 +105,37 @@ export async function verifyOTP(data: {
         const payload = await res.json();
 
         if (!res.ok) {
-            const message = "Invalid OTP";
-            return { success: false, message, status: res.status };
+            return {
+                success: false,
+                data: payload,
+                message: payload.message || "Invalid OTP"
+            };
         }
 
-        return { success: true, data: payload, status: 200 };
-    } catch (e: any) {
-        console.error("Verify OTP error:", e);
+        return {
+            success: true,
+            data: payload,
+            message: payload.message || "OTP verified successfully"
+        };
+    } catch (error) {
+        console.error("Verify OTP error:", error);
         return {
             success: false,
-            message: e?.message || "Unexpected error",
-            status: 500,
+            message: "Network error. Please try again."
         };
     }
 }
 
 /**
  * Reset password with OTP
+ * @param data - The email and new password
+ * @returns {Promise<ActionResponse>} The response from the reset password API
  */
 export async function resetPassword(data: {
     email: string;
     newPassword: string;
 }): Promise<ActionResponse> {
     try {
-        if (!process.env.API) {
-            console.error("API environment variable is not set");
-            return {
-                success: false,
-                message: "Server configuration error. Please contact support.",
-                status: 500,
-            };
-        }
-
         const res = await fetch(`${process.env.API}/auth/resetPassword`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -147,17 +145,23 @@ export async function resetPassword(data: {
         const payload = await res.json();
 
         if (!res.ok) {
-            const message = payload?.message || "Failed to reset password";
-            return { success: false, message, status: res.status };
+            return {
+                success: false,
+                data: payload,
+                message: payload.message || "Failed to reset password"
+            };
         }
 
-        return { success: true, data: payload, status: res.status };
-    } catch (e: any) {
-        console.error("Reset password error:", e);
+        return {
+            success: true,
+            data: payload,
+            message: payload.message || "Password reset successfully"
+        };
+    } catch (error) {
+        console.error("Reset password error:", error);
         return {
             success: false,
-            message: e?.message || "Unexpected error occurred. Please try again.",
-            status: 500,
+            message: "Network error. Please try again."
         };
     }
 }

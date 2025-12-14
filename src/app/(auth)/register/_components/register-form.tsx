@@ -8,27 +8,25 @@ import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import React from "react";
 import { toast } from "sonner";
 import PhoneField from "./phone-number";
-import { signIn } from "next-auth/react";
 import { registerSchema } from "@/lib/schemes/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useRouter } from "next/navigation";
 import PasswordInput from "@/components/features/auth/password-input";
+import { RegisterFormFields } from "@/lib/types/auth";
 
-export interface registerFormFields {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  phone: string;
-  password: string;
-  rePassword: string;
-}
 export default function RegisterFrom() {
+  /* -------------------------------------------------------------------------- */
+  /*                                 NAVIGATION                                 */
+  /* -------------------------------------------------------------------------- */
   const router = useRouter();
-  const form = useForm<registerFormFields>({
+
+  /* -------------------------------------------------------------------------- */
+  /*                              FORM & VALIDATION                             */
+  /* -------------------------------------------------------------------------- */
+  const form = useForm<RegisterFormFields>({
     resolver: zodResolver(registerSchema),
-    mode: "onChange", // Validate on change
+    mode: "onChange",
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -45,7 +43,15 @@ export default function RegisterFrom() {
     setError,
     formState: { errors },
   } = form;
-  const onSubmit: SubmitHandler<registerFormFields> = async (data) => {
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  FUNCTIONS                                 */
+  /* -------------------------------------------------------------------------- */
+  /**
+   * Handle form submission
+   * @param data - The registration form data
+   */
+  const onSubmit: SubmitHandler<RegisterFormFields> = async (data) => {
     // Clear previous global error if exists
     if (errors.root?.serverError) {
       setError("root.serverError", { type: "manual", message: "" });
@@ -66,15 +72,31 @@ export default function RegisterFrom() {
 
     if (!result.success) {
       // Set global error if no field errors exist
-      const hasFieldErrors = errors.firstName || errors.lastName || errors.username || 
-                            errors.email || errors.phone || errors.password || errors.rePassword;
-      if (!hasFieldErrors) {
-        setError("root.serverError", {
-          type: "manual",
-          message: result.message || "Something went wrong"
-        });
+      const hasFieldErrors = errors.firstName || errors.lastName || errors.username ||
+        errors.email || errors.phone || errors.password || errors.rePassword;
+
+      const errorData = result.data || {};
+      const fieldKeys: (keyof RegisterFormFields)[] = ["firstName", "lastName", "username", "email", "phone", "password", "rePassword"];
+      const message = result.message || "";
+      let handled = false;
+
+      // Check if result contains specific field error keys or if message contains field name
+      for (const key of fieldKeys) {
+        if (errorData[key] || message.toLowerCase().includes(key.toLowerCase())) {
+          setError(key, {
+            type: "manual",
+            message: errorData[key] || message
+          }, { shouldFocus: true });
+
+          handled = true;
+          break; // Focus the first error found
+        }
       }
-      toast.error(result.message || "Registration failed");
+
+      if (!handled && !hasFieldErrors) {
+        setError("root.serverError", { message: message });
+      }
+
       return;
     }
 
@@ -85,7 +107,7 @@ export default function RegisterFrom() {
   return (
     <div className=" flex  flex-col gap-8  ">
       <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-      
+
       <FormProvider {...form}>
         <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
@@ -194,13 +216,13 @@ export default function RegisterFrom() {
           </div>
           {/* Submit Button */}
           {errors.root?.serverError && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
-        </div>
-      )}
+            <div className="bg-red-50 border border-red-200 rounded-md my-2 p-3">
+              <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
+            </div>
+          )}
           <Button type="submit"
             onClick={() => console.log(form.getValues())}
-            className="mt-8 w-full">
+            className="mt-2 w-full">
             Create Account
           </Button>
         </form>

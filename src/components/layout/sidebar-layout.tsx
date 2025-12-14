@@ -16,10 +16,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
 export default function SidebarLayout({ children }: { children: React.ReactNode }) {
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   NAVIGATION                               */
+  /* -------------------------------------------------------------------------- */
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  /* -------------------------------------------------------------------------- */
+  /*                                   FUNCTIONS                                */
+  /* -------------------------------------------------------------------------- */
   const handleLogout = async () => {
     await signOut({ redirect: false });
     router.push("/login");
@@ -33,12 +40,13 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
   };
 
+
   // Check if diplomas is active (includes /diplomas and /diplomas/[id] but not /account-settings)
   const isDiplomasActive = pathname === "/diplomas" || (pathname.startsWith("/diplomas/"));
   const isAccountSettingsActive = pathname === "/account-settings";
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen ">
       {/* Left Side - Sidebar */}
       <aside className="w-64 p-5 h-screen bg-blue-50 justify-between items-center flex flex-col">
         <div className="flex flex-col gap-16 w-full h-full">
@@ -131,7 +139,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       </aside>
 
       {/* Right Side - Main Content */}
-      <main className="w-full h-screen overflow-y-scroll p-5">
+      <main className="w-full h-screen overflow-y-scroll py-2 px-4">
         {children}
       </main>
     </div>

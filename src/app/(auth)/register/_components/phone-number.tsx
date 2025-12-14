@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } 
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
   from "@/components/ui/select";
-import { registerFormFields } from "./register-form";
+import { RegisterFormFields } from "@/lib/types/auth";
 import { cn } from "@/lib/utils";
 
 const countries = [
@@ -23,17 +23,24 @@ const countries = [
 ];
 
 export default function PhoneField() {
-  const { register, formState: { errors } } = useFormContext<registerFormFields>();
-  const [selectedCountryCode, setSelectedCountryCode] = useState("EG"); // Default to Egypt
+  /* -------------------------------------------------------------------------- */
+/*                                    STATE                                   */
+/* -------------------------------------------------------------------------- */
+const [selectedCountryCode, setSelectedCountryCode] = useState("EG"); // Default to Egypt
+
+  /* -------------------------------------------------------------------------- */
+  /*                              FORM & VALIDATION                             */
+  /* -------------------------------------------------------------------------- */
+  const { register, formState: { errors } } = useFormContext<RegisterFormFields>();
+
   
-  const selectedCountry = countries.find((c) => c.code === selectedCountryCode) || countries[0];
 
   return (
     <div className="space-y-2">
       <Label htmlFor="phone" className="text-sm font-medium">
         Phone Number
       </Label>
-      
+
       <div className="flex  items-center">
         {/* Country Dropdown */}
         <Select value={selectedCountryCode} onValueChange={(value) => {

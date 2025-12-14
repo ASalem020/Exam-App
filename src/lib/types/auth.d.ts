@@ -1,4 +1,4 @@
-export type LoginResponse ={
+export type LoginResponse = {
 
     message: string;
     token: string;
@@ -14,5 +14,33 @@ export type LoginResponse ={
         createdAt: string;
     };
 };
+
+export interface RegisterFormFields {
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+    phone: string;
+    password: string;
+    rePassword: string;
+}
+
+export interface LoginFormFields {
+    email: string;
+    password: string;
+}
+
+export interface ForgotFormFields {
+    email: string;
+}
+
+export interface VerifyOTPFormFields {
+    otp: string;
+}
+
+export interface CreatePasswordFormFields {
+    password: string;
+    rePassword: string;
+}
 
 

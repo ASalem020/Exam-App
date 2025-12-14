@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ExamResultResponse } from '@/types/answers';
-import { Question } from '@/types/questions';
+import { ExamResultResponse } from '@/lib/types/answers';
+import { Question } from '@/lib/types/questions';
 import { CheckCircle, XCircle, RotateCcw, Eye } from 'lucide-react';
 
 interface ExamResultsProps {
@@ -20,7 +20,7 @@ export default function ExamResults({
 
     const totalQuestions = result.correct + result.wrong;
     const correctPercentage = Math.round((result.correct / totalQuestions) * 100) || 0;
-    const wrongPercentage = 100 - correctPercentage;
+    
 
     // SVG Donut Chart Calculation
     const radius = 50;

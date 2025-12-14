@@ -2,17 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@radix-ui/react-label";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-
-interface VerifyOTPFormFields {
-  otp: string;
-}
+import { VerifyOTPFormFields } from "@/lib/types/auth";
 
 interface VerifyOTPFormProps {
   email: string;
@@ -22,21 +20,25 @@ interface VerifyOTPFormProps {
 }
 
 export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: VerifyOTPFormProps) {
-  const { setEmail, cooldown, startCooldown } = useAuth();
+  /* -------------------------------------------------------------------------- */
+  /*                                   CONTEXT                                  */
+  /* -------------------------------------------------------------------------- */
+  const { getCooldown, startCooldown } = useAuth();
 
-  const { control, handleSubmit, formState: { isValid, errors }, setError } = useForm<VerifyOTPFormFields>({
-    defaultValues: {
-      otp: ""
-    },
-    mode: "onChange"
-  });
+  /* -------------------------------------------------------------------------- */
+  /*                                    STATE                                   */
+  /* -------------------------------------------------------------------------- */
+  const [cooldown, setCooldown] = useState(0);
 
+  /* -------------------------------------------------------------------------- */
+  /*                                  MUTATIONS                                 */
+  /* -------------------------------------------------------------------------- */
   const verifyMutation = useMutation({
     mutationFn: async (data: { email: string; resetCode: string }) => {
       const { verifyOTP } = await import("@/app/(auth)/actions/auth.actions");
       const result = await verifyOTP(data);
       if (!result.success) {
-        throw new Error(result.message || "Invalid OTP");
+        throw new Error(result.data.message || "Invalid OTP");
       }
       return result;
     },
@@ -45,14 +47,6 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
       onSuccess();
     },
     onError: (error: Error) => {
-      // Set global error if no field errors exist
-      const hasFieldErrors = errors.otp;
-      if (!hasFieldErrors) {
-        setError("root.serverError", {
-          type: "manual",
-          message: error.message || "Something went wrong"
-        });
-      }
       toast.error(error.message || "Something went wrong. Please try again.");
     }
   });
@@ -68,13 +62,35 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
     },
     onSuccess: () => {
       toast.success("OTP resent successfully!");
-      startCooldown();
+      startCooldown(email);
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to resend OTP");
     }
   });
 
+  /* -------------------------------------------------------------------------- */
+  /*                              FORM & VALIDATION                             */
+  /* -------------------------------------------------------------------------- */
+  const { control, handleSubmit, formState: { isValid, errors }, setError } = useForm<VerifyOTPFormFields>({
+    defaultValues: {
+      otp: ""
+    },
+    mode: "onChange"
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  VARIABLES                                 */
+  /* -------------------------------------------------------------------------- */
+  const isLoading = verifyMutation.isPending || resendMutation.isPending;
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  FUNCTIONS                                 */
+  /* -------------------------------------------------------------------------- */
+  /**
+   * Handle form submission
+   * @param data - The OTP form data
+   */
   const onSubmit: SubmitHandler<VerifyOTPFormFields> = (data) => {
     if (data.otp.length !== 6) {
       toast.error("Please enter a valid 6-digit OTP");
@@ -83,12 +99,31 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
     verifyMutation.mutate({ email, resetCode: data.otp });
   };
 
+  /**
+   * Handle resend OTP
+   */
   const handleResendOTP = () => {
     if (cooldown > 0) return;
     resendMutation.mutate(email);
   };
 
-  const isLoading = verifyMutation.isPending || resendMutation.isPending;
+  /* -------------------------------------------------------------------------- */
+  /*                                   EFFECTS                                  */
+  /* -------------------------------------------------------------------------- */
+  /**
+   * Update cooldown for current email
+   */
+  useEffect(() => {
+    const updateCooldown = () => {
+      const remaining = getCooldown(email);
+      setCooldown(remaining);
+    };
+
+    updateCooldown();
+    const interval = setInterval(updateCooldown, 1000);
+
+    return () => clearInterval(interval);
+  }, [email, getCooldown]);
 
   return (
     email ? (
@@ -109,7 +144,7 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
           </p>
 
         </div>
-        
+
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
@@ -143,11 +178,12 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
 
           <div className="flex flex-col gap-4">
             {errors.root?.serverError && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
-            <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
-          </div>
-        )}
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
+              </div>
+            )}
             <Button type="submit" disabled={isLoading || !isValid} className="w-full">
+              {verifyMutation.isPending && <Spinner size="sm" className="mr-2" />}
               {verifyMutation.isPending ? "Verifying..." : "Verify OTP"}
             </Button>
 
