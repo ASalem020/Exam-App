@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Label, Pie, PieChart } from "recharts";
 import {
-  ChartConfig,
-  ChartContainer,
+    ChartConfig,
+    ChartContainer,
 } from "@/components/ui/chart";
 
 interface ExamTimerProps {
@@ -13,21 +13,73 @@ interface ExamTimerProps {
 }
 
 const chartConfig = {
-  timeLeft: {
-    label: "Time Left",
-    color: "hsl(var(--chart-1))",
-  },
-  timeUsed: {
-    label: "Time Used",
-    color: "hsl(var(--muted))",
-  },
+    timeLeft: {
+        label: "Time Left",
+        color: "hsl(var(--chart-1))",
+    },
+    timeUsed: {
+        label: "Time Used",
+        color: "hsl(var(--muted))",
+    },
 } satisfies ChartConfig;
 
 export default function ExamTimer({ durationMinutes, onTimeUp }: ExamTimerProps) {
+    /* -------------------------------------------------------------------------- */
+    /*                                    STATE                                   */
+    /* -------------------------------------------------------------------------- */
     const totalSeconds = durationMinutes * 60;
     const [timeLeft, setTimeLeft] = useState(totalSeconds);
+    const [canStart, setCanStart] = useState(false);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  VARIABLES                                 */
+    /* -------------------------------------------------------------------------- */
+    // Calculate time used and percentage
+    const timeUsed = totalSeconds - timeLeft;
+
+    // Visual warning when time is low (e.g., less than 5 minutes)
+    const isLowTime = timeLeft < 5 * 60;
+    const isCriticalTime = timeLeft < 2 * 60;
+
+    // Chart data with dynamic values
+    const chartData = useMemo(() => [
+        {
+            category: "timeLeft",
+            value: timeLeft,
+            fill: isCriticalTime ? "hsl(0 84% 60%)" : isLowTime ? "hsl(38 92% 50%)" : "hsl(221, 83%, 53%)"
+        },
+        {
+            category: "timeUsed",
+            value: timeUsed,
+            fill: "hsl(var(--muted))"
+        },
+    ], [timeLeft, timeUsed, isLowTime, isCriticalTime]);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  FUNCTIONS                                 */
+    /* -------------------------------------------------------------------------- */
+    /**
+     * Formats seconds into MM:SS
+     */
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   EFFECTS                                  */
+    /* -------------------------------------------------------------------------- */
+    useEffect(() => {
+        const startTimer = setTimeout(() => {
+            setCanStart(true);
+        }, 2000);
+        return () => clearTimeout(startTimer);
+    }, []);
 
     useEffect(() => {
+        if (!canStart) return;
+
         if (timeLeft <= 0) {
             onTimeUp();
             return;
@@ -38,35 +90,8 @@ export default function ExamTimer({ durationMinutes, onTimeUp }: ExamTimerProps)
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timeLeft, onTimeUp]);
+    }, [timeLeft, onTimeUp, canStart]);
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    // Calculate time used and percentage
-    const timeUsed = totalSeconds - timeLeft;
-    
-
-    // Visual warning when time is low (e.g., less than 5 minutes)
-    const isLowTime = timeLeft < 5 * 60;
-    const isCriticalTime = timeLeft < 2 * 60;
-
-    // Chart data with dynamic values
-    const chartData = useMemo(() => [
-        { 
-            category: "timeLeft", 
-            value: timeLeft, 
-            fill: isCriticalTime ? "hsl(0 84% 60%)" : isLowTime ? "hsl(38 92% 50%)" : "hsl(221, 83%, 53%)" 
-        },
-        { 
-            category: "timeUsed", 
-            value: timeUsed, 
-            fill: "hsl(var(--muted))" 
-        },
-    ], [timeLeft, timeUsed, isLowTime, isCriticalTime]);
 
     return (
         <div className="flex items-center w-fit h-fit justify-center">
@@ -98,13 +123,12 @@ export default function ExamTimer({ durationMinutes, onTimeUp }: ExamTimerProps)
                                             <tspan
                                                 x={viewBox.cx}
                                                 y={viewBox.cy}
-                                                className={` text-xs  font-bold ${
-                                                    isCriticalTime ? "fill-red-600" : isLowTime ? "fill-orange-600" : "fill-blue-600"
-                                                }`}
+                                                className={` text-xs  font-bold ${isCriticalTime ? "fill-red-600" : isLowTime ? "fill-orange-600" : "fill-blue-600"
+                                                    }`}
                                             >
                                                 {formatTime(timeLeft)}
                                             </tspan>
-                                           
+
                                         </text>
                                     );
                                 }

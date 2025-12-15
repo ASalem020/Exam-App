@@ -1,17 +1,22 @@
 import React from 'react';
 
 interface ExamProgressProps {
+    diplomaName: string;
+    examTitle: string;
     currentQuestionIndex: number;
     totalQuestions: number;
 }
 
-export default function ExamProgress({ currentQuestionIndex, totalQuestions }: ExamProgressProps) {
+export default function ExamProgress({ diplomaName, examTitle, currentQuestionIndex, totalQuestions }: ExamProgressProps) {
+    /* -------------------------------------------------------------------------- */
+    /*                                  VARIABLES                                 */
+    /* -------------------------------------------------------------------------- */
     const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
 
     return (
         <div className="w-full space-y-2">
             <div className="flex justify-between text-sm font-medium text-gray-600">
-                <span> </span>
+                <span>{diplomaName} - {examTitle}</span>
                 <span>Question {currentQuestionIndex + 1} of {totalQuestions}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">

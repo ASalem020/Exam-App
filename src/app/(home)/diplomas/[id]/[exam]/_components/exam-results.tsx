@@ -16,11 +16,16 @@ export default function ExamResults({
     userAnswers,
     onRestart,
 }: ExamResultsProps) {
+    /* -------------------------------------------------------------------------- */
+    /*                                    STATE                                   */
+    /* -------------------------------------------------------------------------- */
     const [showDetails, setShowDetails] = useState(false);
 
+    /* -------------------------------------------------------------------------- */
+    /*                                  VARIABLES                                 */
+    /* -------------------------------------------------------------------------- */
     const totalQuestions = result.correct + result.wrong;
     const correctPercentage = Math.round((result.correct / totalQuestions) * 100) || 0;
-    
 
     // SVG Donut Chart Calculation
     const radius = 50;

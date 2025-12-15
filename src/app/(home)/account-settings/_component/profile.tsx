@@ -2,20 +2,34 @@
 
 import PhoneField from "@/app/(auth)/register/_components/phone-number";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { profileSchema, type ProfileSchema } from "@/lib/schemes/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useUpdateProfile, useDeleteAccount } from "@/hooks/use-profile";
 import FormGlobalError from "@/components/features/auth/form-global-error";
+import { AlertTriangle, X } from "lucide-react";
 
 type ProfileFormFields = ProfileSchema;
 
 export default function Profile() {
+
+
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   STATES                                   */
+  /* -------------------------------------------------------------------------- */
+
+  const [isOpen, setIsOpen] = useState(false)
+
+
+
+
   /* -------------------------------------------------------------------------- */
   /*                                   CONTEXT                                  */
   /* -------------------------------------------------------------------------- */
@@ -46,7 +60,7 @@ export default function Profile() {
     setError,
     handleSubmit,
     reset,
-    formState: { errors: profileErrors, isDirty },
+    formState: { errors: profileErrors, isDirty, isSubmitting },
   } = profileForm;
 
   /* -------------------------------------------------------------------------- */
@@ -70,16 +84,16 @@ export default function Profile() {
       const hasFieldErrors = profileErrors.firstName || profileErrors.lastName ||
         profileErrors.username || profileErrors.email || profileErrors.phone;
       if (!hasFieldErrors) {
-    setError("root.serverError", {
+        setError("root.serverError", {
           message: "Something went wrong",
         });
       }
-      if(error.message.includes("findAndModify")){
+      if (error.message.includes("findAndModify")) {
         setError("root.serverError", {
           message: "This Email Is Already In Use",
         });
       }
-      if(error.message.includes("must be a valid email")){
+      if (error.message.includes("must be a valid email")) {
         setError("root.serverError", {
           message: "Please enter a valid email",
         });
@@ -208,13 +222,61 @@ export default function Profile() {
                 type="button"
                 variant="outline"
                 className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                onClick={handleDeleteAccount}
+                onClick={() => setIsOpen(true)}
               >
                 Delete My Account
               </Button>
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                Save Changes
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={isSubmitting || updateProfileMutation.isPending}>
+                {isSubmitting || updateProfileMutation.isPending ? <Spinner size="sm" className="mr-2" /> : "Save Changes"}
               </Button>
+              {isOpen && (
+                <div onClick={() => setIsOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                  <div className="relative w-full max-w-lg rounded-lg bg-white p-8 shadow-xl">
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+                    >
+                      <X size={20} />
+                    </button>
+
+                    <div className="flex flex-col items-center gap-4 text-center">
+                      <div className="rounded-full bg-red-50 p-4">
+                        <AlertTriangle className="h-10 w-10 text-red-500" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-bold text-red-500">
+                          Are you sure you want to delete your account?
+                        </h3>
+                        <p className="text-gray-500">
+                          This action is permanent and cannot be undone.
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex w-full gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="flex-1"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          className="flex-1 bg-red-600 hover:bg-red-700"
+                          onClick={handleDeleteAccount}
+                          disabled={deleteAccountMutation.isPending}
+                        >
+                          {deleteAccountMutation.isPending ? <Spinner size="sm" className="mr-2" /> : "Yes, delete"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </form>

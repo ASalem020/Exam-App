@@ -14,14 +14,6 @@ export default function QuestionCard({
     onSelectAnswer,
 
 }: QuestionCardProps) {
-    /* -------------------------------------------------------------------------- */
-    /*                                  FUNCTIONS                                 */
-    /* -------------------------------------------------------------------------- */
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">

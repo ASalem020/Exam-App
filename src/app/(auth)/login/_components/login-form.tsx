@@ -14,6 +14,7 @@ import { loginSchema } from "@/lib/schemes/auth.schema";
 import { LoginFormFields } from "@/lib/types/auth";
 import FormGlobalError from "@/components/features/auth/form-global-error";
 import ReusablePasswordInput from "@/components/features/auth/reusable-password-input";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function LoginFrom() {
   /* -------------------------------------------------------------------------- */
@@ -32,7 +33,7 @@ export default function LoginFrom() {
     }
   });
 
-  const { register, handleSubmit, setError, formState: { errors } } = form;
+  const {  register, handleSubmit, setError, formState: { errors , isSubmitting } } = form;
 
   /* -------------------------------------------------------------------------- */
   /*                                  FUNCTIONS                                 */
@@ -72,7 +73,7 @@ export default function LoginFrom() {
           message: response.error || "Something went wrong"
         });
       }
-      toast.error(response.error || "Invalid credentials");
+      
     }
 
     if (response?.ok) {
@@ -118,7 +119,7 @@ export default function LoginFrom() {
             </Link>
           </div>
           <FormGlobalError errors={errors} />
-          <Button type="submit" className="mt-4 w-full">Login</Button>
+          <Button type="submit" className="mt-4 w-full" disabled={isSubmitting}>{isSubmitting ? <Spinner size="sm" className="mr-2"/> : "Login"}</Button>
         </form>
       </FormProvider>
 

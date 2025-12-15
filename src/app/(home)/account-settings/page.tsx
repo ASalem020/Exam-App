@@ -72,7 +72,7 @@ export default function AccountSettingPage() {
         <div>
 
         <Button variant="outline" onClick={handleLogout} className="text-red-600 bg-red-50 hover:text-red-600">
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="mr-2 h-4 w-4 rotate-180" />
                     <span>Logout</span>
                   </Button>
         </div>

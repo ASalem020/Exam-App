@@ -4,6 +4,7 @@ import React from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -34,7 +35,7 @@ export default function Password() {
         },
     });
 
-    const { setError: setPasswordError, setFocus, formState: { errors: passwordErrors } } = passwordForm;
+    const { setError: setPasswordError, setFocus, formState: { errors: passwordErrors, isSubmitting } } = passwordForm;
 
     /* -------------------------------------------------------------------------- */
     /*                                  FUNCTIONS                                 */
@@ -121,8 +122,8 @@ export default function Password() {
                         {/* Global Error */}
                         <FormGlobalError errors={passwordErrors} />
                         {/* Submit Button */}
-                        <Button type="submit" className="mt-4 w-full  bg-blue-600 hover:bg-blue-700">
-                            Update Password
+                        <Button type="submit" className="mt-4 w-full  bg-blue-600 hover:bg-blue-700" disabled={isSubmitting || changePasswordMutation.isPending}>
+                            {isSubmitting || changePasswordMutation.isPending ? <Spinner size="sm" className="mr-2" /> : "Update Password"}
                         </Button>
                     </div>
                 </form>

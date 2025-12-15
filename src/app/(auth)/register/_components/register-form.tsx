@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import Link from "next/link";
@@ -42,7 +43,7 @@ export default function RegisterFrom() {
     register,
     handleSubmit,
     setError,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = form;
 
   /* -------------------------------------------------------------------------- */
@@ -219,8 +220,10 @@ export default function RegisterFrom() {
           <FormGlobalError errors={errors} />
           <Button type="submit"
             onClick={() => console.log(form.getValues())}
-            className="mt-2 w-full">
-            Create Account
+            className="mt-2 w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? <Spinner size="sm" className="mr-2" /> : "Create Account"}
           </Button>
         </form>
       </FormProvider>

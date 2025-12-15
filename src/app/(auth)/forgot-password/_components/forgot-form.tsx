@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@radix-ui/react-label";
 import Link from "next/link";
@@ -10,6 +11,8 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { ForgotFormFields } from "@/lib/types/auth";
 import FormGlobalError from "@/components/features/auth/form-global-error";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { forgotPasswordSchema } from "@/lib/schemes/auth.schema";
 
 interface ForgotFormProps {
   onSuccess: (email: string) => void;
@@ -29,7 +32,8 @@ export default function ForgotForm({ onSuccess }: ForgotFormProps) {
   /* -------------------------------------------------------------------------- */
   /*                              FORM & VALIDATION                             */
   /* -------------------------------------------------------------------------- */
-  const { register, handleSubmit, setValue, watch, setError, setFocus, formState: { errors } } = useForm<ForgotFormFields>({
+  const { register, handleSubmit, setValue, watch, setError, setFocus, formState: { errors, isSubmitting } } = useForm<ForgotFormFields>({
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: currentEmail || ""
     }
@@ -130,18 +134,22 @@ export default function ForgotForm({ onSuccess }: ForgotFormProps) {
           </Label>
           <Input
             id="email"
-            className={`w-full mb-3 ${errors.root?.serverError.message?.includes("email") ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            type="email"
+            className={`w-full mb-3 ${errors.root?.serverError.message?.includes("email") ? "border-red-500 focus-visible:ring-red-500" : ""} ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
             placeholder="user@example.com"
             {...register("email")}
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">{errors.email.message as string}</p>
+          )}
         </div>
         <FormGlobalError errors={errors} />
         <Button
           type="submit"
-          disabled={currentCooldown > 0}
+          disabled={currentCooldown > 0 || isSubmitting}
           className="mt-4 w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {currentCooldown > 0 ? `Resend in ${currentCooldown}s` : "Send OTP"}
+          {isSubmitting ? <Spinner size="sm" className="mr-2" /> : (currentCooldown > 0 ? `Resend in ${currentCooldown}s` : "Send OTP")}
         </Button>
       </form>
 

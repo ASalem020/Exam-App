@@ -33,14 +33,8 @@ export default function HomeHeader({ text, icon, back, breadcrumbs = [] }: HomeH
   /* -------------------------------------------------------------------------- */
   /*                                   FUNCTIONS                                */
   /* -------------------------------------------------------------------------- */
-  // Helper function to decode URL-encoded strings (e.g., %20 -> space)
-  const decodeLabel = (label: string) => {
-    try {
-      return decodeURIComponent(label);
-    } catch {
-      return label; // Return original if decoding fails
-    }
-  };
+
+
 
   // Default breadcrumbs if not provided
   const defaultBreadcrumbs: BreadcrumbItem[] = [
@@ -60,10 +54,10 @@ export default function HomeHeader({ text, icon, back, breadcrumbs = [] }: HomeH
               <BreadcrumbItem>
                 {item.href && index !== breadcrumbItems.length - 1 ? (
                   <BreadcrumbLink asChild>
-                    <Link href={item.href}>{decodeLabel(item.label)}</Link>
+                    <Link href={item.href}>{item.label}</Link>
                   </BreadcrumbLink>
                 ) : (
-                  <BreadcrumbPage className="text-blue-600">{decodeLabel(item.label)}</BreadcrumbPage>
+                  <BreadcrumbPage className="text-blue-600">{item.label}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
               {index < breadcrumbItems.length - 1 && (

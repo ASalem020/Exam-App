@@ -37,7 +37,7 @@ export default function DiplomaExams() {
                 back={true}
                 breadcrumbs={breadcrumbs}
             />
-            {isLoading && <Loading text="Loading exams..." />}
+            {isLoading && ( <Loading text="Loading exams..." />)}
             {error && (
                 <div className="flex flex-col items-center justify-center p-8">
                     <p className="text-red-600 font-medium">Error: {(error as Error).message}</p>

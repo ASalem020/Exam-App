@@ -1,5 +1,5 @@
 'use client'
-import { BookOpenCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BadgeQuestionMark, BookOpenCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams, useParams } from 'next/navigation';
 import React, { useState } from 'react'
 import HomeHeader from '@/components/layout/home-header'
@@ -17,9 +17,9 @@ export default function Exam() {
     /* -------------------------------------------------------------------------- */
     const searchParams = useSearchParams();
     const params = useParams();
-
-    const diplomaName = params.id as string;
-    const examTitle = params.exam as string;
+  // Helper function to decode URL-encoded strings (e.g., %20 -> space)
+    const diplomaName = decodeURIComponent(params.id as string);
+    const examTitle = decodeURIComponent(params.exam as string);
     const examId = searchParams.get('exam');
 
     /* -------------------------------------------------------------------------- */
@@ -135,8 +135,8 @@ export default function Exam() {
     return (
         <div className="w-full">
             <HomeHeader
-                text={questions[0]?.exam?.title || "Exam"}
-                icon={<BookOpenCheck className='text-white' />}
+                text={'['+questions[0]?.exam?.title+'] Questions' || "Exam"}
+                icon={<BadgeQuestionMark className='text-white' />}
                 back={true}
                 breadcrumbs={breadcrumbs}
             />
@@ -145,7 +145,7 @@ export default function Exam() {
                 {/* Top Bar: Timer and Progress */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
                     <div className="w-full">
-                        <ExamProgress currentQuestionIndex={currentQuestionIndex} totalQuestions={totalQuestions} />
+                        <ExamProgress diplomaName={diplomaName} examTitle={examTitle} currentQuestionIndex={currentQuestionIndex} totalQuestions={totalQuestions} />
                     </div>
                 </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
@@ -43,7 +44,7 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
   const {
     handleSubmit,
     setError,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = form;
 
   /* -------------------------------------------------------------------------- */
@@ -129,8 +130,9 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
           <Button
             type="submit"
             className='mt-4 w-full'
+            disabled={isSubmitting}
           >
-            Reset Password
+            {isSubmitting ? <Spinner size="sm" className="mr-2" /> : "Reset Password"}
           </Button>
         </form>
       </FormProvider>

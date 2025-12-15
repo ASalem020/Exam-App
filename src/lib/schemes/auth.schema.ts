@@ -49,6 +49,13 @@ export const registerSchema = z
 
 export type RegisterSchema = z.infer<typeof registerSchema>;
 
+// Forgot password schema
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Email must be a valid email"),
+});
+
+export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
+
 // Password reset schema
 export const resetPasswordSchema = z
   .object({
