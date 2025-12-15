@@ -70,7 +70,7 @@ export default function Diplomas() {
             >
                 {subjects.map((item: Subject) => (
                     <div
-                        className='relative cursor-pointer shadow-sm hover:shadow-md transition-shadow'
+                        className='relative  cursor-pointer shadow-sm rounded-lg hover:shadow-md transition-shadow'
                         onClick={() => router.push(`/diplomas/${item.name}`)}
                         key={item._id}
                     >
@@ -78,11 +78,11 @@ export default function Diplomas() {
                             src={item.icon}
                             width={200}
                             height={300}
-                            className='w-full object-cover'
+                            className='w-full h-full object-cover rounded-sm'
                             alt={item.name}
                         />
-                        <div className='absolute w-full bg-blue-600/80 backdrop-blur-sm bottom-0 left-0 right-0'>
-                            <p className='p-3 text-white font-semibold text-center'>{item.name}</p>
+                        <div className='absolute w-fll rounded-md bg-blue-600/60 backdrop-blur-sm bottom-5  left-5 right-5'>
+                            <p className='p-3 text-white font-semibold text-start text-xl'>{item.name}</p>
                         </div>
                     </div>
                 ))}

@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useUpdateProfile, useDeleteAccount } from "@/hooks/use-profile";
+import FormGlobalError from "@/components/features/auth/form-global-error";
 
 type ProfileFormFields = ProfileSchema;
 
@@ -42,7 +43,7 @@ export default function Profile() {
   });
 
   const {
-    setError: setProfileError,
+    setError,
     handleSubmit,
     reset,
     formState: { errors: profileErrors, isDirty },
@@ -56,10 +57,6 @@ export default function Profile() {
    * @param data - The profile form data
    */
   const onProfileSubmit: SubmitHandler<ProfileFormFields> = async (data) => {
-    // Clear previous global error if exists
-    if (profileErrors.root?.serverError) {
-      setProfileError("root.serverError", { type: "manual", message: "" });
-    }
 
     // Check If User No Change Any Data
     if (!isDirty) {
@@ -73,9 +70,18 @@ export default function Profile() {
       const hasFieldErrors = profileErrors.firstName || profileErrors.lastName ||
         profileErrors.username || profileErrors.email || profileErrors.phone;
       if (!hasFieldErrors) {
-        setProfileError("root.serverError", {
-          type: "manual",
-          message: error?.message || "Something went wrong",
+    setError("root.serverError", {
+          message: "Something went wrong",
+        });
+      }
+      if(error.message.includes("findAndModify")){
+        setError("root.serverError", {
+          message: "This Email Is Already In Use",
+        });
+      }
+      if(error.message.includes("must be a valid email")){
+        setError("root.serverError", {
+          message: "Please enter a valid email",
         });
       }
     }
@@ -107,106 +113,109 @@ export default function Profile() {
   }, [session?.user, reset]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 bg-white shadow-md p-4 min-h-[70vh]  max-w-4xl w-full">
       <FormProvider {...profileForm}>
-        <form onSubmit={handleSubmit(onProfileSubmit)} className="flex flex-col gap-6">
-          {/* Global Error */}
-          {profileErrors.root?.serverError && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-              <p className="text-red-600 text-sm">{profileErrors.root.serverError.message}</p>
-            </div>
-          )}
+        <form onSubmit={handleSubmit(onProfileSubmit)} className="flex flex-col gap-6 justify-between h-full">
 
-          {/* First and Last Name */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
+
+            {/* First and Last Name */}
+            <div className="grid grid-cols-2 gap-6 ">
+              <div>
+                <Label htmlFor="firstName" className="mb-2 block">
+                  First name
+                </Label>
+                <Input
+                  id="firstName"
+                  className={`w-full ${profileErrors.firstName && "border-red-500 focus-visible:ring-red-500"
+                    }`}
+                  placeholder="Ahmed"
+                  {...profileForm.register("firstName")}
+                />
+                {profileErrors.firstName && (
+                  <p className="text-red-500 text-sm mt-1">{profileErrors.firstName.message}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="lastName" className="mb-2 block">
+                  Last name
+                </Label>
+                <Input
+                  id="lastName"
+                  className={`w-full ${profileErrors.lastName && "border-red-500 focus-visible:ring-red-500"
+                    }`}
+                  placeholder="Abdullah"
+                  {...profileForm.register("lastName")}
+                />
+                {profileErrors.lastName && (
+                  <p className="text-red-500 text-sm mt-1">{profileErrors.lastName.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Username */}
             <div>
-              <Label htmlFor="firstName" className="mb-2 block">
-                First name
+              <Label htmlFor="username" className="mb-2 block">
+                Username
               </Label>
               <Input
-                id="firstName"
-                className={`w-full ${profileErrors.firstName && "border-red-500 focus-visible:ring-red-500"
+                id="username"
+                className={`w-full ${profileErrors.username && "border-red-500 focus-visible:ring-red-500"
                   }`}
-                placeholder="Ahmed"
-                {...profileForm.register("firstName")}
+                placeholder="user123"
+                {...profileForm.register("username")}
               />
-              {profileErrors.firstName && (
-                <p className="text-red-500 text-sm mt-1">{profileErrors.firstName.message}</p>
+              {profileErrors.username && (
+                <p className="text-red-500 text-sm mt-1">{profileErrors.username.message}</p>
               )}
             </div>
+
+            {/* Email */}
             <div>
-              <Label htmlFor="lastName" className="mb-2 block">
-                Last name
+              <Label htmlFor="email" className="mb-2 block">
+                Email
               </Label>
               <Input
-                id="lastName"
-                className={`w-full ${profileErrors.lastName && "border-red-500 focus-visible:ring-red-500"
+                id="email"
+                type="email"
+                className={`w-full ${profileErrors.email && "border-red-500 focus-visible:ring-red-500"
                   }`}
-                placeholder="Abdullah"
-                {...profileForm.register("lastName")}
+                placeholder="user@example.com"
+                {...profileForm.register("email")}
               />
-              {profileErrors.lastName && (
-                <p className="text-red-500 text-sm mt-1">{profileErrors.lastName.message}</p>
+              {profileErrors.email && (
+                <p className="text-red-500 text-sm mt-1">{profileErrors.email.message}</p>
+              )}
+            </div>
+
+            {/* Phone */}
+            <div>
+              <PhoneField />
+              {profileErrors.phone && (
+                <p className="text-red-500 text-sm mt-1">{profileErrors.phone.message}</p>
               )}
             </div>
           </div>
 
-          {/* Username */}
           <div>
-            <Label htmlFor="username" className="mb-2 block">
-              Username
-            </Label>
-            <Input
-              id="username"
-              className={`w-full ${profileErrors.username && "border-red-500 focus-visible:ring-red-500"
-                }`}
-              placeholder="user123"
-              {...profileForm.register("username")}
-            />
-            {profileErrors.username && (
-              <p className="text-red-500 text-sm mt-1">{profileErrors.username.message}</p>
-            )}
-          </div>
 
-          {/* Email */}
-          <div>
-            <Label htmlFor="email" className="mb-2 block">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              className={`w-full ${profileErrors.email && "border-red-500 focus-visible:ring-red-500"
-                }`}
-              placeholder="user@example.com"
-              {...profileForm.register("email")}
-            />
-            {profileErrors.email && (
-              <p className="text-red-500 text-sm mt-1">{profileErrors.email.message}</p>
-            )}
-          </div>
 
-          {/* Phone */}
-          <div>
-            <PhoneField />
-            {profileErrors.phone && (
-              <p className="text-red-500 text-sm mt-1">{profileErrors.phone.message}</p>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-              onClick={handleDeleteAccount}
-            >
-              Delete My Account
-            </Button>
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-              Save Changes
-            </Button>
+            {/* Global Error */}
+            <FormGlobalError errors={profileErrors} />
+            {/* Action Buttons */}
+            <div className="flex justify-end items-end gap-4 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                onClick={handleDeleteAccount}
+              >
+                Delete My Account
+              </Button>
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                Save Changes
+              </Button>
+            </div>
           </div>
         </form>
       </FormProvider>

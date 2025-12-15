@@ -9,6 +9,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { ForgotFormFields } from "@/lib/types/auth";
+import FormGlobalError from "@/components/features/auth/form-global-error";
 
 interface ForgotFormProps {
   onSuccess: (email: string) => void;
@@ -28,7 +29,7 @@ export default function ForgotForm({ onSuccess }: ForgotFormProps) {
   /* -------------------------------------------------------------------------- */
   /*                              FORM & VALIDATION                             */
   /* -------------------------------------------------------------------------- */
-  const { register, handleSubmit, setValue, watch, setError, formState: { errors } } = useForm<ForgotFormFields>({
+  const { register, handleSubmit, setValue, watch, setError, setFocus, formState: { errors } } = useForm<ForgotFormFields>({
     defaultValues: {
       email: currentEmail || ""
     }
@@ -61,18 +62,15 @@ export default function ForgotForm({ onSuccess }: ForgotFormProps) {
       const errorData = result.data || {};
 
       if (errorData.email || message.toLowerCase().includes("email")) {
-        setError("email", {
-          type: "manual",
+        setError("root.serverError", {
           message: errorData.email || message
-        }, { shouldFocus: true });
+        });
+        setFocus("email");
       } else {
         setError("root.serverError", {
-          type: "manual",
           message: message
         });
       }
-
-      toast.error(message);
       return;
     }
 
@@ -132,16 +130,12 @@ export default function ForgotForm({ onSuccess }: ForgotFormProps) {
           </Label>
           <Input
             id="email"
-            className="w-full"
+            className={`w-full mb-3 ${errors.root?.serverError.message?.includes("email") ? "border-red-500 focus-visible:ring-red-500" : ""}`}
             placeholder="user@example.com"
             {...register("email")}
           />
         </div>
-        {errors.root?.serverError && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
-            <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
-          </div>
-        )}
+        <FormGlobalError errors={errors} />
         <Button
           type="submit"
           disabled={currentCooldown > 0}

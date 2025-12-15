@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { fetchSubjects, fetchExams, fetchQuestions, checkExamAnswers } from "@/app/(home)/actions/diplomas.actions";
+import { toast } from "sonner";
 
 /**
  * Hook for fetching subjects with infinite scroll
@@ -78,8 +79,7 @@ export function useCheckExamAnswers() {
             return checkExamAnswers(payload, session.accessToken);
         },
         onError: (error: Error) => {
-            console.error("Error submitting exam:", error);
-            alert("Failed to submit exam. Please try again.");
+            toast.error("Failed to submit exam. Please try again.");
         },
     });
 }

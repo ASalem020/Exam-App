@@ -12,8 +12,9 @@ import { registerSchema } from "@/lib/schemes/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useRouter } from "next/navigation";
-import PasswordInput from "@/components/features/auth/password-input";
+import ReusablePasswordInput from "@/components/features/auth/reusable-password-input";
 import { RegisterFormFields } from "@/lib/types/auth";
+import FormGlobalError from "@/components/features/auth/form-global-error";
 
 export default function RegisterFrom() {
   /* -------------------------------------------------------------------------- */
@@ -198,7 +199,7 @@ export default function RegisterFrom() {
               <Label htmlFor="password" className="mb-2 block ">
                 Password
               </Label>
-              <PasswordInput name="password" />
+              <ReusablePasswordInput<RegisterFormFields> name="password" />
             </div>
             {errors.password && (
               <p className="text-red-500">{errors.password.message}</p>
@@ -208,18 +209,14 @@ export default function RegisterFrom() {
               <Label htmlFor="rePassword" className="mb-2 block ">
                 Confirm password
               </Label>
-              <PasswordInput name="rePassword" />
+              <ReusablePasswordInput<RegisterFormFields> name="rePassword" />
               {errors.rePassword && (
                 <p className="text-red-500">{errors.rePassword.message}</p>
               )}
             </div>
           </div>
           {/* Submit Button */}
-          {errors.root?.serverError && (
-            <div className="bg-red-50 border border-red-200 rounded-md my-2 p-3">
-              <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
-            </div>
-          )}
+          <FormGlobalError errors={errors} />
           <Button type="submit"
             onClick={() => console.log(form.getValues())}
             className="mt-2 w-full">

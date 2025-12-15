@@ -139,7 +139,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       </aside>
 
       {/* Right Side - Main Content */}
-      <main className="w-full h-screen overflow-y-scroll py-2 px-4">
+      <main className="w-full h-screen bg-gray-50 overflow-y-scroll py-2 px-4">
         {children}
       </main>
     </div>

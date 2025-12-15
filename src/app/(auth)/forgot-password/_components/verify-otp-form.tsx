@@ -11,6 +11,7 @@ import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { VerifyOTPFormFields } from "@/lib/types/auth";
+import FormGlobalError from "@/components/features/auth/form-global-error";
 
 interface VerifyOTPFormProps {
   email: string;
@@ -47,7 +48,11 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
       onSuccess();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Something went wrong. Please try again.");
+      setError("root.serverError", {
+        type: "manual",
+        message: error.message || "Failed to verify OTP"
+      });
+      setFocus("otp", { shouldSelect: true });
     }
   });
 
@@ -65,14 +70,17 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
       startCooldown(email);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to resend OTP");
+      setError("root.serverError", {
+        type: "manual",
+        message: error.message || "Failed to resend OTP"
+      });
     }
   });
 
   /* -------------------------------------------------------------------------- */
   /*                              FORM & VALIDATION                             */
   /* -------------------------------------------------------------------------- */
-  const { control, handleSubmit, formState: { isValid, errors }, setError } = useForm<VerifyOTPFormFields>({
+  const { control, handleSubmit, formState: { isValid, errors }, setError, setFocus } = useForm<VerifyOTPFormFields>({
     defaultValues: {
       otp: ""
     },
@@ -161,6 +169,7 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
                     maxLength={6}
                     value={field.value}
                     onChange={field.onChange}
+                    ref={field.ref}
                   >
                     <InputOTPGroup className="gap-2">
                       <InputOTPSlot index={0} />
@@ -177,11 +186,7 @@ export default function VerifyOTPForm({ email, onSuccess, onBack, onEdit }: Veri
           </div>
 
           <div className="flex flex-col gap-4">
-            {errors.root?.serverError && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-red-600 text-sm">{errors.root.serverError.message}</p>
-              </div>
-            )}
+            <FormGlobalError errors={errors} />
             <Button type="submit" disabled={isLoading || !isValid} className="w-full">
               {verifyMutation.isPending && <Spinner size="sm" className="mr-2" />}
               {verifyMutation.isPending ? "Verifying..." : "Verify OTP"}

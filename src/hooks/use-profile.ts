@@ -26,9 +26,6 @@ export function useUpdateProfile() {
             });
             toast.success("Profile updated successfully!");
         },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to update profile");
-        },
     });
 }
 

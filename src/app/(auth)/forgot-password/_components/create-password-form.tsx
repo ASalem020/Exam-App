@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import ReusablePasswordInput from "@/components/features/auth/reusable-password-input";
 import { useAuth } from "@/context/auth-context";
 import { CreatePasswordFormFields } from "@/lib/types/auth";
+import FormGlobalError from "@/components/features/auth/form-global-error";
 
 interface CreatePasswordFormProps {
   email: string;
@@ -48,7 +49,7 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
   /* -------------------------------------------------------------------------- */
   /*                                  FUNCTIONS                                 */
   /* -------------------------------------------------------------------------- */
-  
+
   const onSubmit: SubmitHandler<CreatePasswordFormFields> = async (data) => {
     try {
       // Use server action instead of API route
@@ -60,26 +61,26 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
       });
 
       if (!result.success) {
-     
-          setError("root.serverError", {
-            type: "manual",
-            message: result.message || "Something went wrong"
-          });
-          return;
-        }
-  
+
+        setError("root.serverError", {
+          type: "manual",
+          message: result.message || "Something went wrong"
+        });
+        return;
+      }
+
       toast.success(result.message || "Password reset successfully!");
       clearAuthState(); // Clear all stored state
       router.push("/login");
     }
     catch (error: any) {
-    
-        setError("root.serverError", {
-          type: "manual",
-          message: error?.message || "Something went wrong"
-        });
-      }
-   
+
+      setError("root.serverError", {
+        type: "manual",
+        message: error?.message || "Something went wrong"
+      });
+    }
+
   };
 
   return (
@@ -121,13 +122,10 @@ export default function CreatePasswordForm({ email }: CreatePasswordFormProps) {
               <p className="text-red-500 text-sm mt-1">{errors.rePassword.message as string}</p>
             )}
           </div>
+          {/* Global Error Message */}
 
+          <FormGlobalError errors={errors} />
           {/* Submit Button */}
-          {errors.root?.serverError && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-              <p className="text-red-600 text-center text-sm">{errors.root.serverError.message}</p>
-            </div>
-          )}
           <Button
             type="submit"
             className='mt-4 w-full'
